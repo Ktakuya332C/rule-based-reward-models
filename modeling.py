@@ -39,6 +39,7 @@ class RuleBasedRewardModel(PreTrainedModel):
         hidden_state = (
             rewards.unsqueeze(-1).expand(batch_size, sequence_length).unsqueeze(-1)
         )
+        hidden_state = hidden_state.to(input_ids.device)
         return BaseModelOutput(
             last_hidden_state=hidden_state,
             hidden_states=(hidden_state,),
