@@ -1,5 +1,5 @@
 # Rule based reward models
-Rule based reward models loadable from `AutoModelForSequenceClassification`
+Rule-based reward models that can be loaded with `AutoModelForSequenceClassification`.
 
 ## Development
 ```
