@@ -29,8 +29,10 @@ class RuleBasedRewardModel(PreTrainedModel):
         self.tokenizer = AutoTokenizer.from_pretrained(self.config.tokenizer_path)
         self.idxs = _get_idxs(self.config.dataset_type)
 
-    def forward(self, input_ids, *args, **kwargs):
+    def forward(self, input_ids, attention_mask=None, *args, **kwargs):
         batch_size, sequence_length = input_ids.shape
+        if attention_mask is not None:
+            input_ids[~attention_mask.bool()] = self.tokenizer.pad_token_id
         query_responses = self.tokenizer.batch_decode(
             input_ids, skip_special_tokens=True
         )
@@ -56,8 +58,8 @@ class RuleBasedRewardForSequenceClassification(PreTrainedModel):
         self.model = RuleBasedRewardModel(config)
         self.score = torch.nn.Identity()
 
-    def forward(self, input_ids, *args, **kwargs):
-        outputs = self.model(input_ids)
+    def forward(self, input_ids, attention_mask=None, *args, **kwargs):
+        outputs = self.model(input_ids, attention_mask)
         logits = self.score(outputs.last_hidden_state)
         pooled_logits = logits[:, -1, :]
         return SequenceClassifierOutput(logits=pooled_logits)
