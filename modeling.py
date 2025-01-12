@@ -46,16 +46,6 @@ class RuleBasedRewardModel(PreTrainedModel):
         )
 
 
-class RuleBasedRewardExtractor(torch.nn.Module):
-
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x):
-        idx = [Ellipsis] + [0 for _ in range(len(x.shape) - 1)]
-        return x[tuple(idx)].unsqueeze(-1)
-
-
 class RuleBasedRewardForSequenceClassification(PreTrainedModel):
     config_class = RuleBasedRewardConfig
     base_model_prefix = "model"
@@ -64,12 +54,13 @@ class RuleBasedRewardForSequenceClassification(PreTrainedModel):
         super().__init__(config)
         self.num_labels = 1
         self.model = RuleBasedRewardModel(config)
-        self.score = RuleBasedRewardExtractor()
+        self.score = torch.nn.Identity()
 
     def forward(self, input_ids, *args, **kwargs):
         outputs = self.model(input_ids)
-        scores = self.score(outputs.last_hidden_state)
-        return SequenceClassifierOutput(logits=scores)
+        logits = self.score(outputs.last_hidden_state)
+        pooled_logits = logits[:, -1, :]
+        return SequenceClassifierOutput(logits=pooled_logits)
 
 
 def _get_idxs(dataset_type):
